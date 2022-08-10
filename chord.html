@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- Plotapi - Chord
+This package enables the generation of Chord diagrams. They can be saved 
+directly to HTML files or displayed in a Jupyter Notebook output cell.
+
+Copyright 2021, Plotapi
+http:
+https:
+
+Copyright 2021, Dr. Shahin Rostami
+http:
+-->
+<!--LICENSE
+Chord (https:
+Copyright (C) 2021  Dr. Shahin Rostami
+-->
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+<title>Plotapi - Chord Diagram</title>
+
+<link href="https://fonts.googleapis.com/css?family=Lato:400,700,900&display=swap" rel="stylesheet" type="text/css"/>
+
+
+<style>
+
+#plotapi-chart-98d0eca7, #featured-plotapi-chart-98d0eca7 {
+    font-size: 16px;
+    font-family: "Lato", sans-serif !important;
+    text-align: center;
+    fill: #454545;
+}
+
+#plotapi-chart-98d0eca7 svg, #featured-plotapi-chart-98d0eca7 svg {
+    max-width: 700px;
+}
+
+.details_thumbs-plotapi-chart-98d0eca7 {
+    margin: 5px;
+    max-width: 85px;
+    padding: 0;
+    display: inline-block; 
+}
+
+.details_thumbs-plotapi-chart-98d0eca7 img {
+    max-width: 85px;
+}
+
+.details_thumbs-plotapi-chart-98d0eca7 figcaption {
+    text-align: center;
+    font-size: 14px;
+}
+
+.hidden_chord {
+    display:none;
+}
+
+.arc_numbers {
+    paint-order: stroke;
+    stroke: #454545;
+    stroke-width: 2px; 
+    font-weight: bold;
+    fill: #fff;
+    font-size: 10px;
+}
+
+@media (min-width: 600px) {
+    #plotapi-chart-98d0eca7 svg, #featured-plotapi-chart-98d0eca7 svg {
+        font-size: 20px;
+    }
+
+    .arc_numbers{
+        font-size: 14px;
+    }
+}
+
+
+</style>
+</head>
+<body>
+    <div id="plotapi-chart-98d0eca7" class="chord plotapi-container"></div>
+
+    <script>
+    (function() {
+        var jupyter_classic = !(typeof(IPython)==="undefined");
+        var dependencies_paths = {
+                        'd3': 'https://plotapi.com/static/js/d3.v7.min',
+                        'chord': 'https://plotapi.com/static/js/d3-chord',
+                    }
+
+        if(jupyter_classic){
+            require.config(
+                {
+                    paths: dependencies_paths
+                }
+            );
+
+            require(['d3','tippy','chord', 'pako'], function(d3, tippy, chord, pako) {
+                window.d3 = d3;
+                window.tippy = tippy;
+                window.pako = pako;
+                plotapi_plot();
+            });
+        }
+        else{
+            var dependencies = Object.values(dependencies_paths);
+            
+            function dependency_loader(dependencies_loaded){
+                var script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = dependencies[dependencies_loaded] + ".js";
+
+                script.onload = function () {
+                    if(dependencies_loaded < dependencies.length-1){
+                    dependency_loader(dependencies_loaded+1)
+                    }
+                    else{
+                        plotapi_plot();
+                    }
+                };
+                document.body.appendChild(script);
+            }
+
+            dependency_loader(0);
+        }
+
+        function plotapi_plot(){
+            margin = {
+                left: 100,
+                top: 100,
+                right: 100,
+                bottom: 100
+            };
+
+            width = Math.min(window.innerWidth, 700) - margin.left - margin.right;
+            height = Math.min(window.innerWidth, 700) - margin.top - margin.bottom;
+            Names = ['Bacteria', 'Benthos', 'Cephalopods', 'Decapods', 'Detritus', 'Osteichthyes', 'Plankton', 'Producers'];
+            matrix = [[0.0, 0.155, 0.0, 0.022, 0.266, 0.034, 0.218, 0.0], [0.0, 0.209, 0.086, 0.054, 0.925, 0.372, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.032, 0.046, 0.0, 0.0, 0.0], [0.247, 0.852, 0.0, 0.194, 0.111, 0.412, 0.297, 0.0], [0.0, 0.0, 0.0, 0.0, 0.393, 0.0, 0.05, 0.0], [0.0, 0.0, 0.0, 0.058, 0.61, 0.288, 0.469, 0.0], [0.0, 1.0, 0.0, 0.0, 0.806, 0.102, 0.899, 0.0]];
+            details = [];
+            details_thumbs = [];
+            conjunction = "and";
+            innerRadius = Math.min(width, height) * 0.4;
+            outerRadius = innerRadius * 1.1;
+
+            offset = 0;
+            
+            
+                var colors = d3.scaleSequential(d3.interpolateGnBu)
+                    .domain([0,matrix.length]);
+
+            
+            var chord_data = chord(true,false)
+                .padAngle(0.1)
+                .sortChords(d3.descending) 
+                (matrix);
+
+            var arc = d3.arc()
+                .innerRadius(innerRadius * 1.01)
+                .outerRadius(outerRadius)
+                .startAngle(startAngle) 
+                .endAngle(endAngle);
+
+            var path = d3.ribbonArrow()
+                .radius(innerRadius)
+                .startAngle(startAngle)
+                .endAngle(endAngle);
+
+            
+            var svg = d3.select("#plotapi-chart-98d0eca7")
+                .append("svg")
+                .attr(
+                    "viewBox",
+                    "0 0 " +
+                    (width + margin.left + margin.right) +
+                    " " +
+                    (height + margin.top + margin.bottom)
+                )
+                .attr("class","plotapi-plot")
+                .attr("preserveAspectRatio", "xMinYMin meet")
+                .append("g")
+                .attr(
+                    "transform",
+                    "translate(" +
+                    (width / 2 + margin.left) +
+                    "," +
+                    (height / 2 + margin.top) +
+                    ") rotate(0)"
+                );
+
+
+
+
+            
+            
+            function getGradID(d) {
+                return ("linkGrad-plotapi-chart-98d0eca7-" + d.source.index + "-" + d.target.index);
+            }
+
+            
+            var grads = svg.append("defs")
+                .selectAll("linearGradient")
+                .data(chord_data)
+                .enter()
+                .append("linearGradient")
+                .attr("id", getGradID)
+                .attr("gradientUnits", "userSpaceOnUse")
+                .attr("x1", function (d, i) {
+                    if(d.source.index == d.target.index){
+                        return 0;
+                    }
+                    return (innerRadius * Math.cos((d.source.endAngle - d.source.startAngle) / 2 + d.source.startAngle - Math.PI / 2));
+                })
+                .attr("y1", function (d, i) {
+                    return (innerRadius * Math.sin((d.source.endAngle - d.source.startAngle) / 2 + d.source.startAngle - Math.PI / 2));
+                })
+                .attr("x2", function (d, i) {
+                    return (innerRadius * Math.cos((d.target.endAngle - d.target.startAngle) / 2 + d.target.startAngle - Math.PI / 2));
+                })
+                .attr("y2", function (d, i) {
+                    return (innerRadius * Math.sin((d.target.endAngle - d.target.startAngle) / 2 + d.target.startAngle - Math.PI / 2));
+                });
+
+            
+            grads.append("stop")
+                .attr("offset", "0%")
+                .attr("stop-color", function (d) {
+                    return colors(d.source.index);
+                });
+
+            
+            grads.append("stop")
+                .attr("offset", "100%")
+                .attr("stop-color", function (d) {
+                    return colors(d.target.index);
+                });
+
+            
+            var outerArcs = svg.selectAll("g.group")
+                .data(chord_data.groups)
+                .enter()
+                .append("g")
+                .attr("class", "group")
+                .on("mouseover", fade(0.1, 1, Names))
+                .on("mouseout", fade(0.8, 0.8, Names));
+
+            outerArcs.append("path")
+                .style("fill", function (d) {
+                    return colors(d.index);
+                })
+                .attr("d", arc)
+                .each(function (d, i) {
+                });
+
+                
+                    
+                    outerArcs.append("text")
+                        .each(function (d) {
+                            d.angle = (d.startAngle + d.endAngle) / 2 + offset;
+                        })
+                        .attr("dy", ".35em")
+                        .attr("class", function (d) {
+                            return "titles";
+                        })
+                        .attr("text-anchor", function (d) {
+                            return d.angle > Math.PI ? "end" : null;
+                        })
+                        .attr("transform", function (d) {
+                            return ("rotate(" + ((d.angle * 180) / Math.PI - 90) + ")" + "translate(" + (outerRadius + 10) + ")" + (d.angle > Math.PI ? "rotate(180)" : ""));
+                        })
+                        .text(function (d, i) {
+                            return Names[i];
+                        })
+                        .call(wrap, 100);
+
+
+                
+                var chords = svg.selectAll("path.chord")
+                    .data(chord_data)
+                    .enter()
+                    .append("path")
+
+                .attr("class", function (d) {
+                    return "chord";
+                })                                 
+                .style("fill", function (d) {
+                    return "url(#" + getGradID(d) + ")";
+                })         
+                .style("opacity", 0.8)
+                .attr("d", path)
+                .on("mouseover", mouseoverChord(Names, conjunction, details, details_thumbs))
+                .on("mouseout", mouseoutChord(0.8, 0.8));
+            
+            function startAngle(d) {
+                return d.startAngle + offset;
+            }
+            function endAngle(d) {
+                return d.endAngle + offset;
+            }
+
+            function wrap(text, width) {
+                text.each(function() {
+                    var text = d3.select(this);
+                    var words = text.text().split(/\s+/).reverse();
+                    var word;
+                    var line = [];
+                    var y = text.attr("y");
+                    var dy = parseFloat(text.attr("dy"));
+                    var tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+                    var lines = 0;
+
+                    while (word = words.pop()) {
+                        line.push(word)
+                        tspan.text(line.join(" "))
+                        
+                        if (tspan.node().getComputedTextLength() > width && line.length > 1) {
+                            line.pop()      
+                            if(line.length != 0){
+                                tspan.text(line.join(" "))
+                            }
+                            line = [word]
+                            tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", "1em").text(word)
+                            lines = lines+1;
+                        }
+                    }
+                    text.select("tspan:nth-child(1)").attr("dy", ""+(0.35-(lines * 0.5))+"em");
+                })
+            }
+
+            
+            function fade(opacityIn, opacityOut, names) {
+                return function (i, d) {
+            
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .filter(function (k) {
+                            return k.source.index !== d.index && k.target.index !== d.index;
+                        })
+                        .transition()
+                        .style("opacity", opacityIn);
+
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .filter(function (k) {
+                            return k.source.index == d.index || k.target.index == d.index;
+                        })
+                        .transition()
+                        .style("opacity", opacityOut);                            
+                };
+            }
+
+            
+            function mouseoverChord(names, conjunction, details, details_thumbs) {
+                return function (i, d) {
+
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .transition()
+                        .style("opacity", 0.1);
+
+                    
+                    d3.select(this).transition().style("opacity", 1);
+
+                };                    
+            }
+
+            
+            function mouseoutChord(opacityIn, opacityOut) {
+                return function (d, i) {
+                    d3.select(this.ownerSVGElement)
+                        .selectAll("path.chord")
+                        .transition()
+                        .style("opacity", opacityOut);
+                };
+            }
+
+
+            
+        
+
+            
+
+            
+            d3.select("#plotapi-chart-98d0eca7 svg")
+                .append("svg:a")
+                .attr("xlink:href", "https://plotapi.com")
+                .attr("target", "_blank")
+                .append("image")
+                .attr("xlink:href", "https://plotapi.com/gallery/icon/plotapi.svg")
+                .attr('width', 20)
+                .attr('height', 20)
+                .attr('x', width+margin.left + margin.right-20)
+                .attr('y', 0)
+                .style("opacity", 0)
+                .attr("id","plotapi-chart-98d0eca7_icon")
+
+            d3.select("#plotapi-chart-98d0eca7_icon")
+                .append("title")
+                .text("Produced with Plotapi");
+
+            d3.select("#plotapi-chart-98d0eca7_icon").on("mouseover", function(d, i) {
+                d3.select("#plotapi-chart-98d0eca7_icon").style("opacity", 1)
+            });
+
+            d3.select("#plotapi-chart-98d0eca7_icon").on("mouseout", function(d, i) {
+                d3.select("#plotapi-chart-98d0eca7_icon").style("opacity", 0.6)
+            });
+
+            d3.select("#plotapi-chart-98d0eca7 svg").on("mouseenter", function() {
+                d3.select("#plotapi-chart-98d0eca7_icon").style("opacity", 0.6)
+            });
+
+            d3.select("#plotapi-chart-98d0eca7 svg").on("mouseleave", function() {
+                                    
+                d3.select("#plotapi-chart-98d0eca7_icon").style("opacity", 0);
+            });
+            
+
+            
+            
+        }    
+
+    }());
+    </script>            
+</body>
+</html>
